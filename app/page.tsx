@@ -1,64 +1,157 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  publishedAt: string | null;
+  updatedAt: string;
+  deployment: {
+    ovhBucketUrl: string | null;
+  } | null;
+}
+
+export default function DashboardPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/projects')
+      .then((res) => res.json())
+      .then(setProjects)
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      <header className="border-b bg-white">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <h1 className="text-xl font-bold text-primary">OVH Website Builder</h1>
+          <Button onClick={() => (window.location.href = '/projects/new')}>
+            + Nouveau site
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold tracking-tight">Mes sites</h2>
+          <p className="text-muted-foreground mt-1">
+            Gérez et publiez vos sites web.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="h-48" />
+              </Card>
+            ))}
+          </div>
+        ) : projects.length === 0 ? (
+          <Card className="max-w-md mx-auto">
+            <CardContent className="py-12 text-center space-y-4">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+                <svg
+                  className="w-8 h-8 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+              <p className="text-lg font-medium">Aucun site pour le moment</p>
+              <p className="text-sm text-muted-foreground">
+                Créez votre premier site en quelques minutes grâce à l&apos;IA.
+              </p>
+              <Button onClick={() => (window.location.href = '/projects/new')}>
+                Créer mon premier site
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <Card key={project.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{project.name}</CardTitle>
+                    <Badge
+                      variant={
+                        project.status === 'PUBLISHED' ? 'default' : 'secondary'
+                      }
+                    >
+                      {project.status === 'PUBLISHED' ? 'En ligne' : 'Brouillon'}
+                    </Badge>
+                  </div>
+                  <CardDescription className="line-clamp-2">
+                    {project.description ?? 'Aucune description'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {project.deployment?.ovhBucketUrl && (
+                    <a
+                      href={project.deployment.ovhBucketUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary underline truncate block"
+                    >
+                      {project.deployment.ovhBucketUrl}
+                    </a>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Modifié le{' '}
+                    {new Date(project.updatedAt).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() =>
+                        (window.location.href = `/projects/${project.id}`)
+                      }
+                    >
+                      Modifier
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={() =>
+                        (window.location.href = `/projects/${project.id}/publish`)
+                      }
+                    >
+                      {project.status === 'PUBLISHED' ? 'Republier' : 'Publier'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

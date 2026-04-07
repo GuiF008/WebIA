@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  createdAt DateTime  @default(now())
+  projects  Project[]
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  name        String
+  description String?
+  grapesData  Json
+  htmlOutput  String?
+  cssOutput   String?
+  status      ProjectStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deployment  Deployment?
+}
+
+model Deployment {
+  id             String         @id @default(cuid())
+  projectId      String         @unique
+  project        Project        @relation(fields: [projectId], references: [id])
+  type           DeploymentType @default(STATIC)
+  ovhBucketName  String?
+  ovhBucketUrl   String?
+  cdnUrl         String?
+  customDomain   String?
+  tlsStatus      TlsStatus      @default(PENDING)
+  lastDeployedAt DateTime?
+  createdAt      DateTime       @default(now())
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+}
+
+enum DeploymentType {
+  STATIC
+  WORDPRESS
+}
+
+enum TlsStatus {
+  PENDING
+  ACTIVE
+  FAILED
+}
