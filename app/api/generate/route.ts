@@ -34,6 +34,8 @@ export async function POST(req: Request) {
     return Response.json(site);
   } catch (error) {
     console.error('[generate] LLM error:', error);
-    return Response.json({ error: 'Erreur de génération' }, { status: 500 });
+    const message =
+      error instanceof Error ? error.message : 'Erreur de génération';
+    return Response.json({ error: message }, { status: 500 });
   }
 }

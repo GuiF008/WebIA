@@ -66,7 +66,10 @@ export default function OnboardingSteps() {
         body: JSON.stringify(form),
       });
 
-      if (!res.ok) throw new Error('Erreur de génération');
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => null);
+        throw new Error(errorBody?.error ?? 'Erreur de génération');
+      }
 
       const site: GeneratedSite = await res.json();
       setGeneratedSite(site);
