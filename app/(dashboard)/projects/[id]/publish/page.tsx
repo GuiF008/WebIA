@@ -44,6 +44,11 @@ export default function PublishPage() {
           }),
         });
 
+        if (!res.ok) {
+          const errorBody = await res.json().catch(() => null);
+          throw new Error(errorBody?.error ?? 'Erreur de publication');
+        }
+
         const data = await res.json();
         if (data.success) {
           setResult(data);

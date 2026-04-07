@@ -95,11 +95,15 @@ export default function OnboardingSteps() {
 
     // Détruire le sandbox E2B avant d'entrer dans l'éditeur (Décision 2)
     if (sandboxId) {
-      fetch('/api/sandbox', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sandboxId }),
-      });
+      try {
+        await fetch('/api/sandbox', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sandboxId }),
+        });
+      } catch {
+        // On continue même si le cleanup échoue, mais on l'attend bien
+      }
     }
 
     const res = await fetch('/api/projects', {
@@ -124,11 +128,15 @@ export default function OnboardingSteps() {
     if (!generatedSite) return;
 
     if (sandboxId) {
-      fetch('/api/sandbox', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sandboxId }),
-      });
+      try {
+        await fetch('/api/sandbox', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sandboxId }),
+        });
+      } catch {
+        // On continue même si le cleanup échoue, mais on l'attend bien
+      }
     }
 
     const projectRes = await fetch('/api/projects', {

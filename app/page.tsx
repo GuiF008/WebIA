@@ -29,8 +29,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch('/api/projects')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Impossible de charger les projets');
+        }
+        return res.json();
+      })
       .then(setProjects)
+      .catch(() => setProjects([]))
       .finally(() => setLoading(false));
   }, []);
 

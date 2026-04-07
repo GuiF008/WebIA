@@ -30,6 +30,7 @@ export default function EditorPage() {
   const [publishUrl, setPublishUrl] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/projects/${params.id}`)
@@ -44,13 +45,23 @@ export default function EditorPage() {
 
   async function handleSave(html: string, css: string) {
     if (!project) return;
+    setSaveError(null);
     setIsSaving(true);
-    await fetch(`/api/projects/${project.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ htmlOutput: html, cssOutput: css }),
-    });
-    setIsSaving(false);
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ htmlOutput: html, cssOutput: css }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Échec de l’enregistrement');
+      }
+    } catch {
+      setSaveError('Enregistrement échoué. Vérifiez votre connexion.');
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   async function handlePublish() {
@@ -71,6 +82,11 @@ export default function EditorPage() {
           description: project.description ?? '',
         }),
       });
+
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => null);
+        throw new Error(errorBody?.error ?? 'Erreur de publication');
+      }
 
       const data = await res.json();
       if (data.success) {
@@ -107,6 +123,11 @@ export default function EditorPage() {
         isSaving={isSaving}
       />
       <div className="flex-1">
+        {saveError && (
+          <div className="px-4 py-2 text-sm text-destructive bg-destructive/10 border-b">
+            {saveError}
+          </div>
+        )}
         <GrapesEditor
           projectId={project.id}
           initialHtml={project.htmlOutput ?? '<p>Commencez à éditer votre site</p>'}

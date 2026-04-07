@@ -2,6 +2,18 @@ import { prisma } from '@/lib/db/prisma';
 import { uploadSite } from '@/lib/ovh/storage';
 import type { PublishRequest } from '@/types/project';
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function sanitizeCssForStyleTag(css: string): string {
+  return css.replace(/<\/style/gi, '<\\/style');
+}
+
 export async function POST(req: Request) {
   const body = (await req.json()) as Partial<PublishRequest>;
 
@@ -10,17 +22,21 @@ export async function POST(req: Request) {
   }
 
   try {
+    const safeTitle = escapeHtml(body.title ?? 'Mon site');
+    const safeDescription = escapeHtml(body.description ?? '');
+    const safeCss = sanitizeCssForStyleTag(body.editorCss ?? '');
+
     const fullHtml = `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${body.title ?? 'Mon site'}</title>
-  <meta name="description" content="${body.description ?? ''}">
+  <title>${safeTitle}</title>
+  <meta name="description" content="${safeDescription}">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     img { max-width: 100%; height: auto; }
-    ${body.editorCss ?? ''}
+    ${safeCss}
   </style>
 </head>
 <body>${body.editorHtml}</body>

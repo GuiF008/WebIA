@@ -14,9 +14,7 @@ export async function createPreviewSandbox(html: string, css: string): Promise<{
     timeoutMs: 60_000,
   });
 
-  const fullHtml = css
-    ? html.replace('</head>', `<style>${css}</style></head>`)
-    : html;
+  const fullHtml = injectCssIntoHtml(html, css);
 
   await sandbox.files.write('/home/user/index.html', fullHtml);
 
@@ -31,6 +29,25 @@ export async function createPreviewSandbox(html: string, css: string): Promise<{
     url: `https://${host}`,
     sandboxId: sandbox.sandboxId,
   };
+}
+
+function injectCssIntoHtml(html: string, css: string): string {
+  if (!css.trim()) {
+    return html;
+  }
+
+  const styleTag = `<style>${css}</style>`;
+
+  if (/<\/head>/i.test(html)) {
+    return html.replace(/<\/head>/i, `${styleTag}</head>`);
+  }
+
+  if (/<body[^>]*>/i.test(html)) {
+    return html.replace(/<body([^>]*)>/i, `<body$1>${styleTag}`);
+  }
+
+  // Fallback robuste pour HTML incomplet généré par le LLM
+  return `<!DOCTYPE html><html lang="fr"><head>${styleTag}</head><body>${html}</body></html>`;
 }
 
 export async function destroySandbox(sandboxId: string): Promise<void> {
